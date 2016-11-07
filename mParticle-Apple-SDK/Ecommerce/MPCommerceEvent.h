@@ -61,7 +61,10 @@ typedef NS_ENUM(NSUInteger, MPCommerceEventAction) {
  
  @see mParticle
  */
-@interface MPCommerceEvent : NSObject <NSCopying, NSCoding>
+@interface MPCommerceEvent : NSObject <NSCopying, NSCoding> {
+@protected
+    NSDate *_timestamp;
+}
 
 /**
  Checkout option string describing what the options are.
@@ -183,7 +186,7 @@ typedef NS_ENUM(NSUInteger, MPCommerceEventAction) {
 /**
  Associates a custom dictionary of key/value pairs to the commerce event.
  
- Alternatively you can set custom attributes using the regular notation for setting key/value pairs in a NSMutableDictionary.
+ Alternatively you can set custom attributes using the regular notation for setting key/value pairs in an NSMutableDictionary.
  
  <b>For example:</b>
  

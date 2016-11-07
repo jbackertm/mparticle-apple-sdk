@@ -40,9 +40,15 @@
 #import "MPProduct+Dictionary.h"
 #import "MPDateFormatter.h"
 #import "NSDictionary+MPCaseInsensitive.h"
+#import "NSArray+MPCaseInsensitive.h"
 
 #if TARGET_OS_IOS == 1
     #import <CoreLocation/CoreLocation.h>
+#endif
+
+#if TARGET_OS_IOS == 1 && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+    #import <UserNotifications/UserNotifications.h>
+    #import <UserNotifications/UNUserNotificationCenter.h>
 #endif
 
 NS_ASSUME_NONNULL_BEGIN
@@ -110,6 +116,12 @@ NS_ASSUME_NONNULL_BEGIN
  @see startWithKey:secret:installationType:environment:proxyAppDelegate:
  */
 @property (nonatomic, unsafe_unretained, readonly) MPEnvironment environment;
+
+/**
+ Flag indicating whether the mParticle SDK has been fully initialized yet or not. You can KVO this property to know when the SDK 
+ successfully finishes initializing
+ */
+@property (nonatomic, unsafe_unretained, readonly) BOOL initialized;
 
 /**
  Specifies the log level output to the console while the app is under development: none, error, warning, and debug.
@@ -233,7 +245,7 @@ NS_ASSUME_NONNULL_BEGIN
         SDK auto-detect the environment for you. Once the app is deployed to the App Store, setting this parameter will have no effect, since the SDK will set
         the environment to production.
  @param proxyAppDelegate Flag indicating whether the mParticle SDK should handle logging remote notifications, app launches, and actions automatically. If you set to NO, 
-        your app is resposible to calling required methods. Default is YES
+        your app is responsible for calling required methods. Default is YES
  @see MPInstallationType
  @see MPEnvironment
  */
@@ -306,6 +318,15 @@ NS_ASSUME_NONNULL_BEGIN
  @see proxiedAppDelegate
  */
 - (void)openURL:(NSURL *)url options:(nullable NSDictionary<NSString *, id> *)options;
+
+/**
+ Informs the mParticle SDK the app has been asked to open to continue an NSUserActivity.
+ This method should be called only if proxiedAppDelegate is disabled. This method is only available for iOS 9 and above.
+ @param userActivity The NSUserActivity that caused the app to be opened
+ @param restorationHandler A block to execute if your app creates objects to perform the task.
+ @see proxiedAppDelegate
+ */
+- (BOOL)continueUserActivity:(nonnull NSUserActivity *)userActivity restorationHandler:(void(^ _Nonnull)(NSArray * _Nullable restorableObjects))restorationHandler;
 
 #pragma mark - Basic Tracking
 /**
@@ -388,7 +409,7 @@ NS_ASSUME_NONNULL_BEGIN
  Checks for deferred deep link information.
  @param completionHandler A block to be called when deep link checking is finished.
  */
-- (void)checkForDeferredDeepLinkWithCompletionHandler:(void(^)(NSDictionary<NSString *, NSString *> * _Nullable linkInfo, NSError * _Nullable error))completionHandler;
+- (void)checkForDeferredDeepLinkWithCompletionHandler:(void(^)(NSDictionary * _Nullable linkInfo, NSError * _Nullable error))completionHandler;
 
 #pragma mark - Error, Exception, and Crash Handling
 /**
@@ -475,13 +496,17 @@ NS_ASSUME_NONNULL_BEGIN
  */
 + (BOOL)registerExtension:(id<MPExtensionProtocol>)extension;
 
+#pragma mark - Integration Attributes (
+- (MPKitExecStatus *)setIntegrationAttributes:(NSDictionary<NSString *, NSString *> *)attributes forKit:(NSNumber *)kitCode;
+- (MPKitExecStatus *)clearIntegrationAttributesForKit:(NSNumber *)kitCode;
+
 #pragma mark - Kits
 /**
  Retrieves the internal instance of a kit, so it can be used to invoke methods and properties of that kit directly.
  
  This method is only applicable to kits that allocate themselves as an object instance or a singleton. For the cases
  where kits are implemented with class methods, you can call those class methods directly
- @param kitCode A NSNumber representing the kit to be retrieved
+ @param kitCode An NSNumber representing the kit to be retrieved
  @returns The internal instance of the kit, or nil, if the kit is not active
  */
 - (nullable id const)kitInstance:(NSNumber *)kitCode;
@@ -489,7 +514,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Returns whether a kit is active or not. You can retrieve if a kit has been already initialized and
  can be used.
- @param kitCode A NSNumber representing the kit to be checked
+ @param kitCode An NSNumber representing the kit to be checked
  @returns Whether the kit is active or not.
  */
 - (BOOL)isKitActive:(NSNumber *)kitCode;
@@ -670,6 +695,12 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)removeUserAttribute:(NSString *)key;
 
+#pragma mark - User Notifications
+#if TARGET_OS_IOS == 1 && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification;
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(UNNotificationResponse *)response;
+#endif
+
 #pragma mark - User Segments
 /**
  Retrieves user segments from mParticle's servers and returns the result as an array of MPUserSegments objects.
@@ -678,7 +709,6 @@ NS_ASSUME_NONNULL_BEGIN
  @param timeout The maximum number of seconds to wait for a response from mParticle's servers. This value can be fractional, like 0.1 (100 milliseconds)
  @param endpointId The endpoint id
  @param completionHandler A block to be called when the results are available. The user segments array is passed to this block
- @returns An array of MPUserSegments objects in the completion handler
  */
 - (void)userSegments:(NSTimeInterval)timeout endpointId:(NSString *)endpointId completionHandler:(MPUserSegmentsHandler)completionHandler;
 

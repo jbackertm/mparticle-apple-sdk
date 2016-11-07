@@ -33,6 +33,7 @@
 #include "MessageTypeName.h"
 #import "MPLocationManager.h"
 #import "MPKitContainer.h"
+#import "MPSearchAdsAttribution.h"
 #import <UIKit/UIKit.h>
 
 NSString *const kCookieDateKey = @"e";
@@ -44,6 +45,7 @@ static BOOL runningInBackground = NO;
 @interface MPStateMachine() {
     BOOL lastestSDKWarningShown;
     BOOL optOutSet;
+    BOOL alwaysTryToCollectIDFASet;
 }
 
 @property (nonatomic, unsafe_unretained) MParticleNetworkStatus networkStatus;
@@ -64,6 +66,7 @@ static BOOL runningInBackground = NO;
 @synthesize logLevel = _logLevel;
 @synthesize minUploadDate = _minUploadDate;
 @synthesize optOut = _optOut;
+@synthesize alwaysTryToCollectIDFA = _alwaysTryToCollectIDFA;
 @synthesize pushNotificationMode = _pushNotificationMode;
 @synthesize storedSDKVersion = _storedSDKVersion;
 @synthesize triggerEventTypes = _triggerEventTypes;
@@ -87,6 +90,7 @@ static BOOL runningInBackground = NO;
         _launchOptions = nil;
         _logLevel = [MPStateMachine environment] == MPEnvironmentProduction ? MPILogLevelNone : MPILogLevelWarning;
         _shouldUploadSessionHistory = YES;
+        _searchAttribution = [[MPSearchAdsAttribution alloc] init];
         
         NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
         
@@ -661,6 +665,45 @@ static BOOL runningInBackground = NO;
     });
 }
 
+- (BOOL)alwaysTryToCollectIDFA {
+    if (alwaysTryToCollectIDFASet) {
+        return _alwaysTryToCollectIDFA;
+    }
+    
+    [self willChangeValueForKey:@"alwaysTryToCollectIDFA"];
+    
+    alwaysTryToCollectIDFASet = YES;
+    
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    NSNumber *alwaysTryToCollectIDFANumber = userDefaults[kMPAlwaysTryToCollectIDFA];
+    
+    if (alwaysTryToCollectIDFANumber) {
+        _alwaysTryToCollectIDFA = [alwaysTryToCollectIDFANumber boolValue];
+    }
+    else {
+        _alwaysTryToCollectIDFA = NO;
+        userDefaults[kMPAlwaysTryToCollectIDFA] = @(_alwaysTryToCollectIDFA);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [userDefaults synchronize];
+        });
+    }
+    
+    [self didChangeValueForKey:@"alwaysTryToCollectIDFA"];
+    
+    return _alwaysTryToCollectIDFA;
+}
+
+- (void)setAlwaysTryToCollectIDFA:(BOOL)alwaysTryToCollectIDFA {
+    _alwaysTryToCollectIDFA = alwaysTryToCollectIDFA;
+    alwaysTryToCollectIDFASet = YES;
+    
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    userDefaults[kMPAlwaysTryToCollectIDFA] = @(alwaysTryToCollectIDFA);
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [userDefaults synchronize];
+    });
+}
+
 - (NSString *)pushNotificationMode {
     if (_pushNotificationMode) {
         return _pushNotificationMode;
@@ -798,6 +841,13 @@ static BOOL runningInBackground = NO;
     [self willChangeValueForKey:@"triggerMessageTypes"];
     _triggerMessageTypes = (NSArray *)messageTypes;
     [self didChangeValueForKey:@"triggerMessageTypes"];
+}
+
+- (void)configureRestrictIDFA:(NSNumber *)restrictIDFA {
+    if (MPIsNull(restrictIDFA)) {
+        restrictIDFA = @YES;
+    }
+    self.alwaysTryToCollectIDFA = [restrictIDFA isEqual:@NO];
 }
 
 @end

@@ -18,10 +18,8 @@
 
 #import "MPIConstants.h"
 
-NSUInteger kMPNumberOfMessageTypes = 17;
-
 // mParticle SDK Version
-NSString *const kMParticleSDKVersion = @"6.2.0";
+NSString *const kMParticleSDKVersion = @"6.10.5";
 
 // Session Upload Settings
 NSString *const kMPSessionHistoryValue = @"sh";
@@ -104,6 +102,7 @@ NSString *const kMPPushNotificationCategoryIdentifierKey = @"acid";
 NSString *const kMPSessionLengthKey = @"sl";
 NSString *const kMPSessionTotalLengthKey = @"slx";
 NSString *const kMPOptOutStatus = @"s";
+NSString *const kMPAlwaysTryToCollectIDFA = @"alwaysTryToCollectIDFA";
 NSString *const kMPCrashingSeverity = @"s";
 NSString *const kMPCrashingClass = @"c";
 NSString *const kMPCrashWasHandled = @"eh";
@@ -141,6 +140,7 @@ NSString *const kMPDeviceTokenTypeKey = @"tot";
 NSString *const kMPDeviceTokenTypeDevelopment = @"appleSandbox";
 NSString *const kMPDeviceTokenTypeProduction = @"appleProduction";
 NSString *const kMPHTTPETagHeaderKey = @"ETag";
+NSString *const kMPAppSearchAdsAttributionKey = @"asaa";
 
 // Remote configuration
 NSString *const kMPRemoteConfigExceptionHandlingModeKey = @"cue";
@@ -183,6 +183,8 @@ NSString *const kMPRemoteConfigTriggerMessageTypesKey = @"dts";
 NSString *const kMPRemoteConfigInfluencedOpenTimerKey = @"pio";
 NSString *const kMPRemoteConfigUniqueIdentifierKey = @"das";
 NSString *const kMPRemoteConfigBracketKey = @"bk";
+NSString *const kMPRemoteConfigRestrictIDFA = @"rdlat";
+NSString *const kMPRemoteConfigIncludeSessionHistory = @"inhd";
 
 // Notifications
 NSString *const kMPCrashReportOccurredNotification = @"MPCrashReportOccurredNotification";
@@ -210,6 +212,7 @@ NSString *const kMPConfigEnableCrashReporting = @"enable_crash_reporting";
 NSString *const kMPConfigLocationTracking = @"enable_location_tracking";
 NSString *const kMPConfigLocationAccuracy = @"location_tracking_accuracy";
 NSString *const kMPConfigLocationDistanceFilter = @"location_tracking_distance_filter";
+NSString *const kMPConfigRegisterForSilentNotifications = @"register_for_silent_notifications";
 
 // Data connection path/status
 NSString *const kDataConnectionOffline = @"offline";
@@ -231,6 +234,7 @@ NSString *const kMPNetworkPerformanceKey = @"MPNetworkPerformance";
 
 // Kits
 NSString *const MPKitAttributeJailbrokenKey = @"jailbroken";
+NSString *const MPIntegrationAttributesKey = @"ia";
 
 // Media Track
 NSString *const MPMediaTrackActionKey = @"act";
@@ -250,12 +254,7 @@ NSString *const kMParticleWebViewPathSetSessionAttribute = @"setSessionAttribute
 //
 // Primitive data type constants
 //
-const NSTimeInterval MINIMUM_SESSION_TIMEOUT =
-    #if TARGET_OS_TV == 1
-        1.0;
-    #else
-        10.0;
-    #endif
+const NSTimeInterval MINIMUM_SESSION_TIMEOUT = 1.0;
 
 const NSTimeInterval MAXIMUM_SESSION_TIMEOUT =
     #if TARGET_OS_TV == 1

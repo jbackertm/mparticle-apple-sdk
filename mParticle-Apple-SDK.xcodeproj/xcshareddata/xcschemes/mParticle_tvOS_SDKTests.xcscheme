@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0730"
+   LastUpgradeVersion = "0810"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -17,8 +17,8 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "C97C09031CA3116800280B1E"
-               BuildableName = "mParticle_tvOS_SDKTests.xctest"
+               BlueprintIdentifier = "C911FD7B1D8A3524002A3516"
+               BuildableName = ".xctest"
                BlueprintName = "mParticle_tvOS_SDKTests"
                ReferencedContainer = "container:mParticle-Apple-SDK.xcodeproj">
             </BuildableReference>
@@ -37,6 +37,13 @@
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "OS_ACTIVITY_MODE"
+            value = "disable"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>

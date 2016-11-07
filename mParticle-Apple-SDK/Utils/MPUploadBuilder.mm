@@ -24,6 +24,7 @@
 #import "MPBags+Internal.h"
 #import "MPForwardRecord.h"
 #import "MPDataModelAbstract.h"
+#import "MPIntegrationAttributes.h"
 
 using namespace std;
 
@@ -46,19 +47,19 @@ using namespace std;
     _session = session;
     
     NSUInteger numberOfMessages = messages.count;
-    NSMutableArray *messageDictionariess = [[NSMutableArray alloc] initWithCapacity:numberOfMessages];
+    NSMutableArray *messageDictionaries = [[NSMutableArray alloc] initWithCapacity:numberOfMessages];
     
     __block vector<int64_t> prepMessageIds;
     prepMessageIds.reserve(numberOfMessages);
     
     for (NSUInteger i = 0; i < numberOfMessages; ++i) {
-        [messageDictionariess addObject:[NSNull null]];
+        [messageDictionaries addObject:[NSNull null]];
     }
     
     [messages enumerateObjectsWithOptions:NSEnumerationConcurrent
                                usingBlock:^(MPMessage *message, NSUInteger idx, BOOL *stop) {
                                    prepMessageIds[idx] = message.messageId;
-                                   messageDictionariess[idx] = [message dictionaryRepresentation];
+                                   messageDictionaries[idx] = [message dictionaryRepresentation];
                                }];
     
     _preparedMessageIds = [[NSMutableArray alloc] initWithCapacity:numberOfMessages];
@@ -80,8 +81,8 @@ using namespace std;
                           kMPLifeTimeValueKey:ltv}
                         mutableCopy];
 
-    if (messageDictionariess) {
-        uploadDictionary[kMPMessagesKey] = messageDictionariess;
+    if (messageDictionaries) {
+        uploadDictionary[kMPMessagesKey] = messageDictionaries;
     }
 
     if (sessionTimeout > 0) {
@@ -128,6 +129,10 @@ using namespace std;
 
 #pragma mark Public instance methods
 - (void)build:(void (^)(MPDataModelAbstract *upload))completionHandler {
+    [self buildAsync:YES completionHandler:completionHandler];
+}
+
+- (void)buildAsync:(BOOL)asyncBuild completionHandler:(void (^ _Nonnull)(MPDataModelAbstract * _Nullable upload))completionHandler {
     MPStateMachine *stateMachine = [MPStateMachine sharedInstance];
     
     uploadDictionary[kMPMessageTypeKey] = kMPMessageTypeRequestHeader;
@@ -135,7 +140,7 @@ using namespace std;
     uploadDictionary[kMPMessageIdKey] = [[NSUUID UUID] UUIDString];
     uploadDictionary[kMPTimestampKey] = MPMilliseconds([[NSDate date] timeIntervalSince1970]);
     uploadDictionary[kMPApplicationKey] = stateMachine.apiKey;
-
+    
     MPApplication *application = [[MPApplication alloc] init];
     uploadDictionary[kMPApplicationInformationKey] = [application dictionaryRepresentation];
     
@@ -146,7 +151,7 @@ using namespace std;
     if (cookies) {
         uploadDictionary[kMPRemoteConfigCookiesKey] = cookies;
     }
-
+    
     NSDictionary *productBags = [stateMachine.bags dictionaryRepresentation];
     if (productBags) {
         uploadDictionary[kMPProductBagKey] = productBags;
@@ -173,38 +178,60 @@ using namespace std;
         }
     }
     
+    NSArray<MPIntegrationAttributes *> *integrationAttributesArray = [persistence fetchIntegrationAttributes];
+    if (integrationAttributesArray) {
+        NSMutableDictionary *integrationAttributesDictionary = [[NSMutableDictionary alloc] initWithCapacity:integrationAttributesArray.count];
+        
+        for (MPIntegrationAttributes *integrationAttributes in integrationAttributesArray) {
+            [integrationAttributesDictionary addEntriesFromDictionary:[integrationAttributes dictionaryRepresentation]];
+        }
+        
+        uploadDictionary[MPIntegrationAttributesKey] = integrationAttributesDictionary;
+    }
+    
 #ifdef SERVER_ECHO
     uploadDictionary[@"echo"] = @true;
 #endif
-
+    
     if (_session) { // MPUpload
         dispatch_block_t completeBuild = ^{
             MPUpload *upload = [[MPUpload alloc] initWithSession:_session uploadDictionary:uploadDictionary];
             
             completionHandler(upload);
             
-            [persistence deleteForwardRecodsIds:forwardRecordsIds];
+            [persistence deleteForwardRecordsIds:forwardRecordsIds];
         };
-        
+
 #if TARGET_OS_IOS == 1
-        [persistence fetchUserNotificationCampaignHistory:^(NSArray<MParticleUserNotification *> *userNotificationCampaignHistory) {
-            if (userNotificationCampaignHistory) {
-                NSMutableDictionary *userNotificationCampaignHistoryDictionary = [[NSMutableDictionary alloc] initWithCapacity:userNotificationCampaignHistory.count];
-                
-                for (MParticleUserNotification *userNotification in userNotificationCampaignHistory) {
-                    if (userNotification.campaignId && userNotification.contentId) {
-                        userNotificationCampaignHistoryDictionary[[userNotification.campaignId stringValue]] = @{kMPRemoteNotificationContentIdHistoryKey:userNotification.contentId,
-                                                                                                                 kMPRemoteNotificationTimestampHistoryKey:MPMilliseconds([userNotification.receiptTime timeIntervalSince1970])};
-                    }
-                }
-                
-                if (userNotificationCampaignHistoryDictionary.count > 0) {
-                    uploadDictionary[kMPRemoteNotificationCampaignHistoryKey] = userNotificationCampaignHistoryDictionary;
+        void (^processUserNotificationCampaign)(NSArray<MParticleUserNotification *> *) = ^(NSArray<MParticleUserNotification *> *userNotificationCampaignHistory) {
+            if (!userNotificationCampaignHistory) {
+                return;
+            }
+            
+            NSMutableDictionary *userNotificationCampaignHistoryDictionary = [[NSMutableDictionary alloc] initWithCapacity:userNotificationCampaignHistory.count];
+            
+            for (MParticleUserNotification *userNotification in userNotificationCampaignHistory) {
+                if (userNotification.campaignId && userNotification.contentId) {
+                    userNotificationCampaignHistoryDictionary[[userNotification.campaignId stringValue]] = @{kMPRemoteNotificationContentIdHistoryKey:userNotification.contentId,
+                                                                                                             kMPRemoteNotificationTimestampHistoryKey:MPMilliseconds([userNotification.receiptTime timeIntervalSince1970])};
                 }
             }
             
+            if (userNotificationCampaignHistoryDictionary.count > 0) {
+                uploadDictionary[kMPRemoteNotificationCampaignHistoryKey] = userNotificationCampaignHistoryDictionary;
+            }
+        };
+        
+        if (asyncBuild) {
+            [persistence fetchUserNotificationCampaignHistory:^(NSArray<MParticleUserNotification *> *userNotificationCampaignHistory) {
+                processUserNotificationCampaign(userNotificationCampaignHistory);
+                completeBuild();
+            }];
+        } else {
+            NSArray<MParticleUserNotification *> *userNotificationCampaignHistory = [persistence fetchUserNotificationCampaignHistorySync];
+            processUserNotificationCampaign(userNotificationCampaignHistory);
             completeBuild();
-        }];
+        }
 #else
         completeBuild();
 #endif

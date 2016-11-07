@@ -27,6 +27,7 @@
 @class MPBags;
 @class MPLocationManager;
 @class MPCustomModule;
+@class MPSearchAdsAttribution;
 
 typedef NS_ENUM(NSUInteger, MPConsoleLogging) {
     MPConsoleLoggingAutoDetect = 0,
@@ -65,7 +66,9 @@ typedef NS_ENUM(NSUInteger, MPConsoleLogging) {
 @property (nonatomic, unsafe_unretained, readonly) BOOL backgrounded;
 @property (nonatomic, unsafe_unretained, readonly) BOOL dataRamped;
 @property (nonatomic, unsafe_unretained) BOOL optOut;
+@property (nonatomic, unsafe_unretained) BOOL alwaysTryToCollectIDFA;
 @property (nonatomic, unsafe_unretained) BOOL shouldUploadSessionHistory;
+@property (nonatomic, strong, nonnull) MPSearchAdsAttribution *searchAttribution;
 
 + (nonnull instancetype)sharedInstance;
 + (MPEnvironment)environment;
@@ -76,5 +79,6 @@ typedef NS_ENUM(NSUInteger, MPConsoleLogging) {
 - (void)configureCustomModules:(nullable NSArray<NSDictionary *> *)customModuleSettings;
 - (void)configureRampPercentage:(nullable NSNumber *)rampPercentage;
 - (void)configureTriggers:(nullable NSDictionary *)triggerDictionary;
+- (void)configureRestrictIDFA:(nullable NSNumber *)restrictIDFA;
 
 @end
