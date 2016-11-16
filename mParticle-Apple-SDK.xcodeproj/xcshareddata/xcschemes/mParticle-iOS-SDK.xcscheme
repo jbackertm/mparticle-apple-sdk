@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "C9DD1DFE1D8A118400D3ABBE"
-               BuildableName = "mParticle-iOS-SDK.framework"
+               BuildableName = "mParticle_Apple_SDK.framework"
                BlueprintName = "mParticle-iOS-SDK"
                ReferencedContainer = "container:mParticle-Apple-SDK.xcodeproj">
             </BuildableReference>
@@ -47,7 +47,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "C9DD1DFE1D8A118400D3ABBE"
-            BuildableName = "mParticle-iOS-SDK.framework"
+            BuildableName = "mParticle_Apple_SDK.framework"
             BlueprintName = "mParticle-iOS-SDK"
             ReferencedContainer = "container:mParticle-Apple-SDK.xcodeproj">
          </BuildableReference>
@@ -65,7 +65,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "C9DD1DFE1D8A118400D3ABBE"
-            BuildableName = "mParticle-iOS-SDK.framework"
+            BuildableName = "mParticle_Apple_SDK.framework"
             BlueprintName = "mParticle-iOS-SDK"
             ReferencedContainer = "container:mParticle-Apple-SDK.xcodeproj">
          </BuildableReference>

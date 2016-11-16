@@ -18,7 +18,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "C911FD7B1D8A3524002A3516"
-               BuildableName = ".xctest"
+               BuildableName = "mParticle_Apple_SDK.xctest"
                BlueprintName = "mParticle_tvOS_SDKTests"
                ReferencedContainer = "container:mParticle-Apple-SDK.xcodeproj">
             </BuildableReference>
