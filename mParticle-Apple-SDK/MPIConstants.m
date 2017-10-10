@@ -19,7 +19,7 @@
 #import "MPIConstants.h"
 
 // mParticle SDK Version
-NSString *const kMParticleSDKVersion = @"6.11.0";
+NSString *const kMParticleSDKVersion = @"6.15.12";
 
 // Session Upload Settings
 NSString *const kMPSessionHistoryValue = @"sh";
@@ -141,6 +141,9 @@ NSString *const kMPDeviceTokenTypeDevelopment = @"appleSandbox";
 NSString *const kMPDeviceTokenTypeProduction = @"appleProduction";
 NSString *const kMPHTTPETagHeaderKey = @"ETag";
 NSString *const kMPAppSearchAdsAttributionKey = @"asaa";
+NSString *const kMPSynchedUserAttributesKey = @"SynchedUserAttributes";
+NSString *const kMPSynchedUserIdentitiesKey = @"SynchedUserIdentities";
+NSString *const kMPLastConfigReceivedKey = @"LastConfigReceived";
 
 // Remote configuration
 NSString *const kMPRemoteConfigExceptionHandlingModeKey = @"cue";
@@ -175,7 +178,6 @@ NSString *const kMPRemoteConfigLocationKey = @"lct";
 NSString *const kMPRemoteConfigLocationModeKey = @"ltm";
 NSString *const kMPRemoteConfigLocationAccuracyKey = @"acc";
 NSString *const kMPRemoteConfigLocationMinimumDistanceKey = @"mdf";
-NSString *const kMPRemoteConfigLatestSDKVersionKey = @"lsv";
 NSString *const kMPRemoteConfigRampKey = @"rp";
 NSString *const kMPRemoteConfigTriggerKey = @"tri";
 NSString *const kMPRemoteConfigTriggerEventsKey = @"evts";
@@ -236,10 +238,6 @@ NSString *const kMPNetworkPerformanceKey = @"MPNetworkPerformance";
 NSString *const MPKitAttributeJailbrokenKey = @"jailbroken";
 NSString *const MPIntegrationAttributesKey = @"ia";
 
-// Media Track
-NSString *const MPMediaTrackActionKey = @"act";
-NSString *const MPMediaTrackPlaybackRateKey = @"pbr";
-
 // mParticle Javascript SDK paths
 NSString *const kMParticleWebViewSdkScheme = @"mp-sdk";
 NSString *const kMParticleWebViewPathLogEvent = @"logEvent";
@@ -287,6 +285,10 @@ const NSTimeInterval DEFAULT_UPLOAD_INTERVAL =
     #else
         600.0;
     #endif
+
+// How long to block config requests after a successful response.
+const NSTimeInterval DEBUG_CONFIG_REQUESTS_QUIET_INTERVAL = 60.0;
+const NSTimeInterval CONFIG_REQUESTS_QUIET_INTERVAL = 10.0*60;
 
 const NSUInteger EVENT_LIMIT = 1000; // maximum number of events per session
 

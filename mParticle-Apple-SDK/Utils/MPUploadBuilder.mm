@@ -13,7 +13,7 @@
 #import "MPUpload.h"
 #import "MPStateMachine.h"
 #import "MPIConstants.h"
-#import "NSUserDefaults+mParticle.h"
+#import "MPIUserDefaults.h"
 #import "MPPersistenceController.h"
 #import "MPCustomModule.h"
 #import "MPStandaloneUpload.h"
@@ -48,29 +48,21 @@ using namespace std;
     
     NSUInteger numberOfMessages = messages.count;
     NSMutableArray *messageDictionaries = [[NSMutableArray alloc] initWithCapacity:numberOfMessages];
-    
-    __block vector<int64_t> prepMessageIds;
-    prepMessageIds.reserve(numberOfMessages);
-    
-    for (NSUInteger i = 0; i < numberOfMessages; ++i) {
-        [messageDictionaries addObject:[NSNull null]];
-    }
-    
-    [messages enumerateObjectsWithOptions:NSEnumerationConcurrent
-                               usingBlock:^(MPMessage *message, NSUInteger idx, BOOL *stop) {
-                                   prepMessageIds[idx] = message.messageId;
-                                   messageDictionaries[idx] = [message dictionaryRepresentation];
-                               }];
-    
     _preparedMessageIds = [[NSMutableArray alloc] initWithCapacity:numberOfMessages];
-    for (NSUInteger i = 0; i < numberOfMessages; ++i) {
-        [_preparedMessageIds addObject:@(prepMessageIds[i])];
-    }
+
+    [messages enumerateObjectsUsingBlock:^(MPMessage *message, NSUInteger idx, BOOL *stop) {
+        [_preparedMessageIds addObject:@(message.messageId)];
+        
+        NSDictionary *messageDictionaryRepresentation = [message dictionaryRepresentation];
+        if (messageDictionaryRepresentation) {
+            [messageDictionaries addObject:messageDictionaryRepresentation];
+        }
+    }];
     
     NSNumber *ltv;
-    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    MPIUserDefaults *userDefaults = [MPIUserDefaults standardUserDefaults];
     ltv = userDefaults[kMPLifeTimeValueKey];
-    if (!ltv) {
+    if (ltv == nil) {
         ltv = @0;
     }
     
@@ -81,7 +73,7 @@ using namespace std;
                           kMPLifeTimeValueKey:ltv}
                         mutableCopy];
 
-    if (messageDictionaries) {
+    if (messageDictionaries.count > 0) {
         uploadDictionary[kMPMessagesKey] = messageDictionaries;
     }
 
@@ -245,19 +237,28 @@ using namespace std;
 - (MPUploadBuilder *)withUserAttributes:(NSDictionary<NSString *, id> *)userAttributes deletedUserAttributes:(NSSet<NSString *> *)deletedUserAttributes {
     if ([userAttributes count] > 0) {
         NSMutableDictionary<NSString *, id> *userAttributesCopy = [userAttributes mutableCopy];
+        if (!userAttributesCopy) {
+            return self;
+        }
+        
         NSArray *keys = [userAttributesCopy allKeys];
         Class numberClass = [NSNumber class];
         
         for (NSString *key in keys) {
             id currentValue = userAttributesCopy[key];
             NSString *newValue = [currentValue isKindOfClass:numberClass] ? [(NSNumber *)currentValue stringValue] : currentValue;
-            userAttributesCopy[key] = newValue;
+            
+            if (newValue) {
+                userAttributesCopy[key] = newValue;
+            }
         }
         
-        uploadDictionary[kMPUserAttributeKey] = userAttributesCopy;
+        if (userAttributesCopy.count > 0) {
+            uploadDictionary[kMPUserAttributeKey] = userAttributesCopy;
+        }
     }
     
-    if (deletedUserAttributes && _session) {
+    if (deletedUserAttributes.count > 0 && _session) {
         uploadDictionary[kMPUserAttributeDeletedKey] = [deletedUserAttributes allObjects];
     }
     

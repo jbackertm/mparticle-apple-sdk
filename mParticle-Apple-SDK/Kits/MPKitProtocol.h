@@ -30,8 +30,8 @@
 @class MPCommerceEvent;
 @class MPEvent;
 @class MPKitExecStatus;
-@class MPMediaTrack;
 @class MPUserSegments;
+@class MPKitAPI;
 
 #if TARGET_OS_IOS == 1 && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
     @class UNUserNotificationCenter;
@@ -54,6 +54,7 @@
 @property (nonatomic, strong, nonnull) NSDictionary *configuration;
 @property (nonatomic, strong, nullable) NSDictionary *launchOptions;
 @property (nonatomic, strong, nullable, readonly) id providerKitInstance;
+@property (nonatomic, strong, nullable) MPKitAPI *kitApi;
 
 #pragma mark Kit lifecycle
 - (void)start;
@@ -73,7 +74,10 @@
 - (nonnull MPKitExecStatus *)setDeviceToken:(nonnull NSData *)deviceToken;
 
 #if TARGET_OS_IOS == 1
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 - (nonnull MPKitExecStatus *)didRegisterUserNotificationSettings:(nonnull UIUserNotificationSettings *)notificationSettings;
+#pragma clang diagnostic pop
 #endif
 
 #pragma mark User Notifications
@@ -129,13 +133,6 @@
 - (nonnull MPKitExecStatus *)setKitAttribute:(nonnull NSString *)key value:(nullable id)value;
 - (nonnull MPKitExecStatus *)setOptOut:(BOOL)optOut;
 - (nullable NSString *)surveyURLWithUserAttributes:(nonnull NSDictionary *)userAttributes;
-
-#pragma mark Media tracking
-- (nonnull MPKitExecStatus *)beginPlaying:(nonnull MPMediaTrack *)mediaTrack;
-- (nonnull MPKitExecStatus *)endPlaying:(nonnull MPMediaTrack *)mediaTrack;
-- (nonnull MPKitExecStatus *)logMetadataWithMediaTrack:(nonnull MPMediaTrack *)mediaTrack;
-- (nonnull MPKitExecStatus *)logTimedMetadataWithMediaTrack:(nonnull MPMediaTrack *)mediaTrack;
-- (nonnull MPKitExecStatus *)updatePlaybackPosition:(nonnull MPMediaTrack *)mediaTrack;
 
 @end
 

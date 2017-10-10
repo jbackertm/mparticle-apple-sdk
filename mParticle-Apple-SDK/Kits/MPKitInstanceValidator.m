@@ -30,6 +30,7 @@ static NSMutableArray<NSNumber *> *validKitCodes;
                                       @(MPKitInstanceKochava),
                                       @(MPKitInstanceComScore),
                                       @(MPKitInstanceKahuna),
+                                      @(MPKitInstanceNielsen),
                                       @(MPKitInstanceForesee),
                                       @(MPKitInstanceAdjust),
                                       @(MPKitInstanceBranchMetrics),
@@ -44,7 +45,13 @@ static NSMutableArray<NSNumber *> *validKitCodes;
                                       @(MPKitInstanceUrbanAirship),
                                       @(MPKitInstanceApptimize),
                                       @(MPKitInstanceButton),
-                                      @(MPKitInstanceRevealMobile)];
+                                      @(MPKitInstanceRevealMobile),
+                                      @(MPKitInstanceRadar),
+                                      @(MPKitInstanceSkyhook),
+                                      @(MPKitInstanceIterable),
+                                      @(MPKitInstanceSingular),
+                                      @(MPKitInstanceAdobe),
+                                      @(MPKitInstanceInstabot)];
 
     validKitCodes = [[NSMutableArray alloc] initWithCapacity:kitCodes.count];
     
@@ -60,6 +67,7 @@ static NSMutableArray<NSNumber *> *validKitCodes;
             case MPKitInstanceKochava:
             case MPKitInstanceComScore:
             case MPKitInstanceKahuna:
+            case MPKitInstanceNielsen:
             case MPKitInstanceForesee:
             case MPKitInstanceAdjust:
             case MPKitInstanceBranchMetrics:
@@ -75,6 +83,12 @@ static NSMutableArray<NSNumber *> *validKitCodes;
             case MPKitInstanceApptimize:
             case MPKitInstanceButton:
             case MPKitInstanceRevealMobile:
+            case MPKitInstanceRadar:
+            case MPKitInstanceSkyhook:
+            case MPKitInstanceIterable:
+            case MPKitInstanceSingular:
+            case MPKitInstanceAdobe:
+            case MPKitInstanceInstabot:
                 [validKitCodes addObject:kitCode];
                 break;
         }

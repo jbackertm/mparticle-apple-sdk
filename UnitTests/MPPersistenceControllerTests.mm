@@ -33,7 +33,7 @@
 #import "MPForwardRecord.h"
 #import "MPKitExecStatus.h"
 
-#define DATABASE_TESTS_EXPECATIONS_TIMEOUT 1
+#define DATABASE_TESTS_EXPECTATIONS_TIMEOUT 1
 
 @interface MPPersistenceControllerTests : XCTestCase
 
@@ -120,7 +120,7 @@
         }];
     }];
     
-    [self waitForExpectationsWithTimeout:DATABASE_TESTS_EXPECATIONS_TIMEOUT handler:nil];
+    [self waitForExpectationsWithTimeout:DATABASE_TESTS_EXPECTATIONS_TIMEOUT handler:nil];
 }
 
 - (void)testMessage {
@@ -158,7 +158,7 @@
                                                                     }];
                                   }];
     
-    [self waitForExpectationsWithTimeout:DATABASE_TESTS_EXPECATIONS_TIMEOUT handler:nil];
+    [self waitForExpectationsWithTimeout:DATABASE_TESTS_EXPECTATIONS_TIMEOUT handler:nil];
 }
 
 - (void)testDeleteMessages {
@@ -190,7 +190,7 @@
                                                                     }];
                                   }];
     
-    [self waitForExpectationsWithTimeout:DATABASE_TESTS_EXPECATIONS_TIMEOUT handler:nil];
+    [self waitForExpectationsWithTimeout:DATABASE_TESTS_EXPECTATIONS_TIMEOUT handler:nil];
 }
 
 - (void)testUpload {
@@ -240,7 +240,7 @@
                          
                      }];
     
-    [self waitForExpectationsWithTimeout:DATABASE_TESTS_EXPECATIONS_TIMEOUT handler:nil];
+    [self waitForExpectationsWithTimeout:DATABASE_TESTS_EXPECTATIONS_TIMEOUT handler:nil];
 }
 
 - (void)testSegments {
@@ -406,6 +406,7 @@
 
 - (void)testIntegrationAttributes {
     MPPersistenceController *persistence = [MPPersistenceController sharedInstance];
+    [persistence deleteIntegrationAttributesForKitCode:@42];
 
     NSNumber *kitCode = @(MPKitInstanceUrbanAirship);
     NSDictionary<NSString *, NSString *> *attributes = @{@"keyUA":@"valueUA"};
@@ -628,7 +629,7 @@
         }];
     }];
     
-    [self waitForExpectationsWithTimeout:DATABASE_TESTS_EXPECATIONS_TIMEOUT handler:nil];
+    [self waitForExpectationsWithTimeout:DATABASE_TESTS_EXPECTATIONS_TIMEOUT handler:nil];
 }
 
 - (void)testExpiredRemoteNotification {
@@ -667,7 +668,7 @@
         [expectation fulfill];
     }];
     
-    [self waitForExpectationsWithTimeout:DATABASE_TESTS_EXPECATIONS_TIMEOUT handler:nil];
+    [self waitForExpectationsWithTimeout:DATABASE_TESTS_EXPECTATIONS_TIMEOUT handler:nil];
 }
 
 - (void)testNonmParticleRemoteNotification {

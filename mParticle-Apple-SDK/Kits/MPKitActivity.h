@@ -1,5 +1,5 @@
 //
-//  NSUserDefaults+mParticle.h
+//  MPKitActivity.h
 //
 //  Copyright 2016 mParticle, Inc.
 //
@@ -18,12 +18,10 @@
 
 #import <Foundation/Foundation.h>
 
-@interface NSUserDefaults(mParticle)
+@interface MPKitActivity : NSObject
 
-- (nullable id)mpObjectForKey:(nonnull NSString *)defaultName;
-- (void)setMPObject:(nullable id)value forKey:(nonnull NSString *)defaultName;
-- (void)removeMPObjectForKey:(nonnull NSString *)defaultName;
-- (nullable id)objectForKeyedSubscript:(nonnull NSString *const)key;
-- (void)setObject:(nullable id)obj forKeyedSubscript:(nonnull NSString *)key;
+- (BOOL)isKitActive:(nonnull NSNumber *)kitCode;
+- (nullable id)kitInstance:(nonnull NSNumber *)kitCode;
+- (void)kitInstance:(nonnull NSNumber *)kitCode withHandler:(void (^ _Nonnull)(id _Nullable kitInstance))handler;
 
 @end

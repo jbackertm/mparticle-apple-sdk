@@ -1,5 +1,5 @@
 //
-//  MPMediaMetadataBase.h
+//  MPForwardQueueParameters.h
 //
 //  Copyright 2016 mParticle, Inc.
 //
@@ -18,16 +18,12 @@
 
 #import <Foundation/Foundation.h>
 
-@interface MPMediaMetadataBase : NSObject {
-    @protected
-    NSMutableDictionary *_objectDictionary;
-}
+@interface MPForwardQueueParameters : NSObject
 
-@property (nonatomic, strong, nonnull) NSMutableDictionary *objectDictionary;
+@property (nonatomic, unsafe_unretained, readonly) NSUInteger count;
 
-- (nullable id)objectForKeyedSubscript:(nonnull NSString *const)key;
-- (void)setObject:(nonnull id)obj forKeyedSubscript:(nonnull NSString *)key;
-- (nullable NSArray *)allKeys;
-- (NSUInteger)count;
+- (nonnull instancetype)initWithParameters:(nonnull NSArray *)parameters;
+- (void)addParameter:(nullable id)parameter;
+- (nullable id)objectAtIndexedSubscript:(NSUInteger)idx;
 
 @end

@@ -19,7 +19,7 @@
 #import "MPNotificationController.h"
 #import "MPIConstants.h"
 #import "MPPersistenceController.h"
-#import "NSUserDefaults+mParticle.h"
+#import "MPIUserDefaults.h"
 #include "MPHasher.h"
 
 @interface MPNotificationController() {
@@ -103,6 +103,8 @@ static int64_t launchNotificationHash = 0;
         return NO;
     }
     
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     UIUserNotificationSettings *userNotificationSettings = [[UIApplication sharedApplication] currentUserNotificationSettings];
     if (!userNotificationSettings) {
         return NO;
@@ -123,6 +125,7 @@ static int64_t launchNotificationHash = 0;
     }
     
     return bringsToForeground;
+#pragma clang diagnostic pop
 }
 
 - (void)verifyIfInfluencedOpen {
@@ -204,7 +207,10 @@ static int64_t launchNotificationHash = 0;
     
     NSDictionary *userInfo = [notification userInfo];
     NSDictionary *launchRemoteNotificationDictionary = userInfo[UIApplicationLaunchOptionsRemoteNotificationKey];
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     UILocalNotification *launchLocalNotification = userInfo[UIApplicationLaunchOptionsLocalNotificationKey];
+#pragma clang diagnostic pop
     NSDictionary *launchLocalNotificationDictionary = nil;
     MParticleUserNotification *userNotification = nil;
     
@@ -246,7 +252,7 @@ static int64_t launchNotificationHash = 0;
         [self verifyIfInfluencedOpen];
     }
     
-    if (shouldDelegateReceivedRemoteNotification) {
+    if (userNotification && shouldDelegateReceivedRemoteNotification) {
         [self.delegate receivedUserNotification:userNotification];
     }
 }
@@ -407,11 +413,11 @@ static int64_t launchNotificationHash = 0;
     
     NSNumber *influencedOpenNumber = nil;
 #ifndef MP_UNIT_TESTING
-    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    MPIUserDefaults *userDefaults = [MPIUserDefaults standardUserDefaults];
     influencedOpenNumber = userDefaults[kMPInfluencedOpenTimerKey];
 #endif
     
-    if (influencedOpenNumber) {
+    if (influencedOpenNumber != nil) {
         _influencedOpenTimer = [influencedOpenNumber doubleValue];
     } else {
         _influencedOpenTimer = 1800;
@@ -424,14 +430,14 @@ static int64_t launchNotificationHash = 0;
     void (^persistInfluencedOpenTimer)(NSNumber *) = ^(NSNumber *infOpenTimer) {
 #ifndef MP_UNIT_TESTING
         dispatch_async(dispatch_get_main_queue(), ^{
-            NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+            MPIUserDefaults *userDefaults = [MPIUserDefaults standardUserDefaults];
             
-            if (!infOpenTimer) {
+            if (infOpenTimer == nil) {
                 [userDefaults removeMPObjectForKey:kMPInfluencedOpenTimerKey];
                 [userDefaults synchronize];
             } else {
                 NSNumber *udInfOpenTimer = userDefaults[kMPInfluencedOpenTimerKey];
-                if (!udInfOpenTimer || ![udInfOpenTimer isEqualToNumber:infOpenTimer]) {
+                if (udInfOpenTimer == nil || ![udInfOpenTimer isEqualToNumber:infOpenTimer]) {
                     userDefaults[kMPInfluencedOpenTimerKey] = infOpenTimer;
                     [userDefaults synchronize];
                 }
@@ -470,7 +476,7 @@ static int64_t launchNotificationHash = 0;
     }
     
 #ifndef MP_UNIT_TESTING
-    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    MPIUserDefaults *userDefaults = [MPIUserDefaults standardUserDefaults];
     deviceToken = userDefaults[kMPDeviceTokenKey];
 #else
     deviceToken = [@"<000000000000000000000000000000>" dataUsingEncoding:NSUTF8StringEncoding];
@@ -479,7 +485,10 @@ static int64_t launchNotificationHash = 0;
     return deviceToken;
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 + (NSDictionary *)dictionaryFromLocalNotification:(UILocalNotification *)notification {
+#pragma clang diagnostic pop
     NSDictionary *userInfo = [notification userInfo];
     
     if (!userInfo || !userInfo[kMPUserNotificationCampaignIdKey] || !userInfo[kMPUserNotificationContentIdKey]) {
@@ -540,7 +549,7 @@ static int64_t launchNotificationHash = 0;
                                                           userInfo:deviceTokenDictionary];
         
 #ifndef MP_UNIT_TESTING
-        NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+        MPIUserDefaults *userDefaults = [MPIUserDefaults standardUserDefaults];
         userDefaults[kMPDeviceTokenKey] = deviceToken;
         [userDefaults synchronize];
 #endif
@@ -582,10 +591,12 @@ static int64_t launchNotificationHash = 0;
     }
     
     UIApplication *app = [UIApplication sharedApplication];
-    
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     UILocalNotification *localNotification = [[UILocalNotification alloc] init];
     localNotification.fireDate = userNotification.localAlertDate;
     localNotification.timeZone = [NSTimeZone defaultTimeZone];
+#pragma clang diagnostic pop
     
     NSMutableDictionary *userInfo = [@{kMPUserNotificationCampaignIdKey:userNotification.campaignId,
                                        kMPUserNotificationContentIdKey:userNotification.contentId}
@@ -620,6 +631,8 @@ static int64_t launchNotificationHash = 0;
     }
     
     if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 8.0) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
         UIUserNotificationSettings *notificationSettings = [app currentUserNotificationSettings];
         if (notificationSettings.types == UIUserNotificationTypeNone) {
             return;
@@ -633,6 +646,7 @@ static int64_t launchNotificationHash = 0;
     }
     
     [app scheduleLocalNotification:localNotification];
+#pragma clang diagnostic pop
 }
 #endif
 

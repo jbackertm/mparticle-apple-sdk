@@ -21,7 +21,7 @@
 #import <sys/sysctl.h>
 #import <mach/machine.h>
 #import "MPStateMachine.h"
-#import "NSUserDefaults+mParticle.h"
+#import "MPIUserDefaults.h"
 #import <objc/runtime.h>
 #import <mach-o/ldsyms.h>
 #import <dlfcn.h>
@@ -43,6 +43,7 @@ NSString *const kMPDeviceProductKey = @"p";
 NSString *const kMPDeviceNameKey = @"dn";
 NSString *const kMPDeviceAdvertiserIdKey = @"aid";
 NSString *const kMPDeviceAppVendorIdKey = @"vid";
+NSString *const kMPDeviceBuildIdKey = @"bid";
 NSString *const kMPDeviceManufacturerKey = @"dma";
 NSString *const kMPDevicePlatformKey = @"dp";
 NSString *const kMPDeviceOSKey = @"dosv";
@@ -66,6 +67,7 @@ NSString *const kMPDeviceIsTabletKey = @"it";
 NSString *const kMPDeviceIdentifierKey = @"deviceIdentifier";
 NSString *const kMPDeviceLimitAdTrackingKey = @"lat";
 NSString *const kMPDeviceIsDaylightSavingTime = @"idst";
+NSString *const kMPDeviceInvalidVendorId = @"00000000-0000-0000-0000-000000000000";
 
 static NSDictionary *jailbrokenInfo;
 
@@ -90,6 +92,7 @@ int main(int argc, char *argv[]);
 @synthesize deviceIdentifier = _deviceIdentifier;
 @synthesize model = _model;
 @synthesize vendorId = _vendorId;
+@synthesize buildId = _buildId;
 @synthesize screenSize = _screenSize;
 
 + (void)initialize {
@@ -221,7 +224,7 @@ int main(int argc, char *argv[]);
         return _deviceIdentifier;
     }
     
-    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    MPIUserDefaults *userDefaults = [MPIUserDefaults standardUserDefaults];
     _deviceIdentifier = userDefaults[kMPDeviceIdentifierKey];
     if (!_deviceIdentifier) {
         _deviceIdentifier = [[NSUUID UUID] UUIDString];
@@ -313,9 +316,34 @@ int main(int argc, char *argv[]);
     }
     
     _vendorId = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
+    MPIUserDefaults *userDefaults = [MPIUserDefaults standardUserDefaults];
+    
+    if (_vendorId && ![_vendorId isEqualToString:kMPDeviceInvalidVendorId]) {
+        userDefaults[kMPDeviceAppVendorIdKey] = _vendorId;
+        [userDefaults synchronize];
+    }
+    else {
+        _vendorId = userDefaults[kMPDeviceAppVendorIdKey];
+    }
     
     return _vendorId;
 }
+
+- (NSString *)buildId {
+    if (_buildId) {
+        return _buildId;
+    }
+
+    size_t size;
+    sysctlbyname("kern.osversion", NULL, &size, NULL, 0);
+    char *buffer = malloc(size);
+    sysctlbyname("kern.osversion", buffer, &size, NULL, 0);
+    _buildId = [NSString stringWithUTF8String:buffer];
+    free(buffer);
+
+    return _buildId;
+}
+
 
 - (CGSize)screenSize {
     if (!CGSizeEqualToSize(_screenSize, CGSizeZero)) {
@@ -462,9 +490,14 @@ int main(int argc, char *argv[]);
     if (auxString) {
         deviceDictionary[kMPDeviceAppVendorIdKey] = auxString;
     }
+
+    auxString = self.buildId;
+    if (auxString) {
+        deviceDictionary[kMPDeviceBuildIdKey] = auxString;
+    }
     
     NSNumber *limitAdTracking = self.limitAdTracking;
-    if (limitAdTracking) {
+    if (limitAdTracking != nil) {
         deviceDictionary[kMPDeviceLimitAdTrackingKey] = limitAdTracking;
     }
 

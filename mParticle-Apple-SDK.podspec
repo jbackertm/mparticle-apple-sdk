@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
     s.name             = "mParticle-Apple-SDK"
-    s.version          = "6.11.0"
+    s.version          = "6.15.12"
     s.summary          = "mParticle Apple SDK."
 
     s.description      = <<-DESC
@@ -49,10 +49,9 @@ Pod::Spec.new do |s|
         ss.source_files         = 'mParticle-Apple-SDK/**/*'
         ss.libraries            = 'c++', 'sqlite3', 'z'
 
-        ss.ios.frameworks       = 'Accounts', 'CoreGraphics', 'CoreLocation', 'CoreTelephony', 'Foundation', 'Security', 'Social', 'SystemConfiguration', 'UIKit'
-        ss.ios.weak_frameworks  = 'AdSupport', 'iAd', 'UserNotifications'
+        ss.ios.frameworks       = 'Accounts', 'AdSupport', 'CoreGraphics', 'CoreLocation', 'CoreTelephony', 'Foundation', 'Security', 'Social', 'SystemConfiguration', 'UIKit'
+        ss.ios.weak_frameworks  = 'iAd', 'UserNotifications'
 
-        ss.tvos.frameworks      = 'CoreGraphics', 'Foundation', 'Security', 'SystemConfiguration', 'UIKit'
-        ss.tvos.weak_frameworks = 'AdSupport'
+        ss.tvos.frameworks      = 'AdSupport', 'CoreGraphics', 'Foundation', 'Security', 'SystemConfiguration', 'UIKit'
     end
 end

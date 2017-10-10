@@ -28,6 +28,9 @@
 @class MPLocationManager;
 @class MPCustomModule;
 @class MPSearchAdsAttribution;
+#if TARGET_OS_IOS == 1
+    @class CLLocation;
+#endif
 
 typedef NS_ENUM(NSUInteger, MPConsoleLogging) {
     MPConsoleLoggingAutoDetect = 0,
@@ -44,8 +47,10 @@ typedef NS_ENUM(NSUInteger, MPConsoleLogging) {
 @property (nonatomic, strong, nullable) NSArray<MPCustomModule *> *customModules;
 @property (nonatomic, strong, nullable) NSString *exceptionHandlingMode;
 @property (nonatomic, strong, nullable) NSString *locationTrackingMode;
-@property (nonatomic, strong, nullable) NSString *latestSDKVersion;
 @property (nonatomic, strong, nullable) NSDictionary *launchOptions;
+#if TARGET_OS_IOS == 1
+@property (nonatomic, strong, nullable) CLLocation *location;
+#endif
 @property (nonatomic, strong, nullable) MPLocationManager *locationManager;
 @property (nonatomic, strong, nonnull) NSDate *minUploadDate;
 @property (nonatomic, strong, nullable) NSString *networkPerformanceMeasuringMode;

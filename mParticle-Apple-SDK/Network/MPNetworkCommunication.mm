@@ -35,9 +35,10 @@
 #import "MPConsumerInfo.h"
 #import "MPPersistenceController.h"
 #import "MPDataModelAbstract.h"
-#import "NSUserDefaults+mParticle.h"
+#import "MPIUserDefaults.h"
 #import "MPSessionHistory.h"
 #import "MPDateFormatter.h"
+#import "MPIConstants.h"
 
 NSString *const urlFormat = @"%@://%@%@/%@%@"; // Scheme, URL Host, API Version, API key, path
 NSString *const kMPConfigVersion = @"/v4";
@@ -212,8 +213,32 @@ NSString *const kMPURLHostConfig = @"config2.mparticle.com";
     return retrievingSegments;
 }
 
+- (void)configRequestDidSucceed {
+    MPIUserDefaults *userDefaults = [MPIUserDefaults standardUserDefaults];
+    userDefaults[kMPLastConfigReceivedKey] = @([NSDate timeIntervalSinceReferenceDate]);
+    [userDefaults synchronize];
+}
+
 #pragma mark Public methods
 - (void)requestConfig:(void(^)(BOOL success, NSDictionary *configurationDictionary))completionHandler {
+    
+    BOOL shouldSendRequest = YES;
+    
+    MPIUserDefaults *userDefaults = [MPIUserDefaults standardUserDefaults];
+    NSNumber *lastReceivedNumber = userDefaults[kMPLastConfigReceivedKey];
+    if (lastReceivedNumber != nil) {
+        NSTimeInterval lastConfigReceivedInterval = [lastReceivedNumber doubleValue];
+        NSTimeInterval interval = [NSDate timeIntervalSinceReferenceDate];
+        NSTimeInterval delta = interval - lastConfigReceivedInterval;
+        NSTimeInterval quietInterval = [MPStateMachine environment] == MPEnvironmentDevelopment ? DEBUG_CONFIG_REQUESTS_QUIET_INTERVAL : CONFIG_REQUESTS_QUIET_INTERVAL;
+        shouldSendRequest = delta > quietInterval;
+    }
+    
+    if (!shouldSendRequest) {
+        completionHandler(YES, nil);
+        return;
+    }
+    
     if (retrievingConfig || [MPStateMachine sharedInstance].networkStatus == MParticleNetworkStatusNotReachable) {
         return;
     }
@@ -259,6 +284,7 @@ NSString *const kMPURLHostConfig = @"config2.mparticle.com";
                      
                      if (responseCode == HTTPStatusCodeNotModified) {
                          completionHandler(YES, nil);
+                         [self configRequestDidSucceed];
                          strongSelf->retrievingConfig = NO;
                          return;
                      }
@@ -279,7 +305,7 @@ NSString *const kMPURLHostConfig = @"config2.mparticle.com";
                      success = success && [data length] > 0;
                      
                      if (!MPIsNull(eTag) && success) {
-                         NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+                         MPIUserDefaults *userDefaults = [MPIUserDefaults standardUserDefaults];
                          userDefaults[kMPHTTPETagHeaderKey] = eTag;
                      }
                      
@@ -301,6 +327,7 @@ NSString *const kMPURLHostConfig = @"config2.mparticle.com";
                      [strongSelf processNetworkResponseAction:responseAction batchObject:nil httpResponse:httpResponse];
                      
                      completionHandler(success, configurationDictionary);
+                     [self configRequestDidSucceed];
                      strongSelf->retrievingConfig = NO;
                  }];
     
@@ -426,7 +453,7 @@ NSString *const kMPURLHostConfig = @"config2.mparticle.com";
                          completionHandler(success, (NSArray *)segments, elapsedTime, segmentError);
                      } else {
                          segmentError = [NSError errorWithDomain:@"mParticle Segments"
-                                                            code:MPNetworkErrorDelayedSegemnts
+                                                            code:MPNetworkErrorDelayedSegments
                                                         userInfo:@{@"message":@"It took too long to retrieve segments."}];
                          
                          completionHandler(success, (NSArray *)segments, elapsedTime, segmentError);

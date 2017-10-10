@@ -1,5 +1,5 @@
 //
-//  MPLaunchInfo.h
+//  MPIUserDefaults.h
 //
 //  Copyright 2016 mParticle, Inc.
 //
@@ -18,14 +18,14 @@
 
 #import <Foundation/Foundation.h>
 
-@interface MPLaunchInfo : NSObject
+@interface MPIUserDefaults : NSObject
 
-@property (nonatomic, strong, readonly, nonnull) NSURL *url;
-@property (nonatomic, strong, readonly, nullable) NSString *sourceApplication;
-@property (nonatomic, strong, readonly, nullable) NSString *annotation;
-@property (nonatomic, strong, readonly, nullable) NSDictionary<NSString *, id> *options;
-
-- (nonnull instancetype)initWithURL:(nonnull NSURL *)url sourceApplication:(nullable NSString *)sourceApplication annotation:(nullable id)annotation;
-- (nonnull instancetype)initWithURL:(nonnull NSURL *)url options:(nullable NSDictionary<NSString *, id> *)options;
++ (nonnull instancetype)standardUserDefaults;
+- (nullable id)mpObjectForKey:(nonnull NSString *)key;
+- (void)setMPObject:(nullable id)value forKey:(nonnull NSString *)key;
+- (void)removeMPObjectForKey:(nonnull NSString *)key;
+- (nullable id)objectForKeyedSubscript:(nonnull NSString *const)key;
+- (void)setObject:(nullable id)obj forKeyedSubscript:(nonnull NSString *)key;
+- (void)synchronize;
 
 @end

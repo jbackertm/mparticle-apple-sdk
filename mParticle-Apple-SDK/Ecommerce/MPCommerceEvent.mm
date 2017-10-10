@@ -83,6 +83,7 @@ static NSArray *actionNames;
 
 @implementation MPCommerceEvent
 
+@synthesize transactionAttributes = _transactionAttributes;
 @synthesize beautifiedAttributes = _beautifiedAttributes;
 @synthesize userDefinedAttributes = _userDefinedAttributes;
 @synthesize currency = _currency;
@@ -220,8 +221,28 @@ static NSArray *actionNames;
         return _beautifiedAttributes;
     }
     
-    _beautifiedAttributes = [[NSMutableDictionary alloc] initWithCapacity:5];
-    return _beautifiedAttributes;
+    NSMutableDictionary *beautifiedAttributes = [NSMutableDictionary dictionary];
+    NSDictionary *attributeNameMapping = @{
+                                           kMPCECheckoutOptions: kMPExpCECheckoutOptions,
+                                           kMPCEProductListName: kMPExpCEProductListName,
+                                           kMPCEProductListSource: kMPExpCEProductListSource
+                                           };
+    
+    [attributeNameMapping enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull shortKey, id  _Nonnull longKey, BOOL * _Nonnull stop) {
+        id value = self.attributes[shortKey];
+        if (value) {
+            beautifiedAttributes[longKey] = value;
+        }
+    }];
+    
+    if (_currency) {
+        beautifiedAttributes[kMPExpCECurrency] = _currency;
+    }
+    
+    NSDictionary *transactionDictionary = [self.transactionAttributes beautifiedDictionaryRepresentation];
+    [beautifiedAttributes addEntriesFromDictionary:transactionDictionary];
+    
+    return beautifiedAttributes;
 }
 
 - (NSMutableArray<MPProduct *> *)latestAddedProducts {
@@ -512,7 +533,7 @@ static NSArray *actionNames;
             }
 
             // Transaction attributes
-            if (!_transactionAttributes.revenue) {
+            if (_transactionAttributes.revenue == nil) {
                 calculatedRevenue += [_transactionAttributes.shipping doubleValue] + [_transactionAttributes.tax doubleValue];
                 _transactionAttributes.revenue = @(calculatedRevenue);
             }
@@ -595,26 +616,25 @@ static NSArray *actionNames;
                 
                 for (product in _productsList) {
                     event = [[MPEvent alloc] initWithName:eventName type:MPEventTypeTransaction];
-                    
-                    if (purchaseOrRefund) {
-                        eventInfo = [[NSMutableDictionary alloc] initWithCapacity:1];
-                        
-                        if (self.transactionAttributes.transactionId) {
-                            eventInfo[kMPExpTATransactionId] = self.transactionAttributes.transactionId;
-                        }
-                        
-                        productDictionary = [product beautifiedDictionaryRepresentation];
-                        if (productDictionary) {
-                            [eventInfo addEntriesFromDictionary:productDictionary];
-                        }
-                        
-                        if (eventInfo.count > 0) {
-                            event.info = eventInfo;
-                        }
-                    } else {
-                        event.info = [product beautifiedDictionaryRepresentation];
+                    eventInfo = [[NSMutableDictionary alloc] initWithCapacity:4];
+
+                    productDictionary = [product beautifiedDictionaryRepresentation];
+                    if (productDictionary) {
+                        [eventInfo addEntriesFromDictionary:productDictionary];
                     }
-                    
+
+                    if (purchaseOrRefund && self.transactionAttributes.transactionId) {
+                        eventInfo[kMPExpTATransactionId] = self.transactionAttributes.transactionId;
+                    }
+
+                    if (_userDefinedAttributes.count > 0) {
+                        [eventInfo addEntriesFromDictionary:_userDefinedAttributes];
+                    }
+
+                    if (eventInfo.count > 0) {
+                        event.info = eventInfo;
+                    }
+
                     commerceEventInstruction = [[MPCommerceEventInstruction alloc] initWithInstruction:instruction event:event product:product];
                     expansionInstructions.push_back(commerceEventInstruction);
                 }
@@ -625,7 +645,7 @@ static NSArray *actionNames;
                 eventName = [NSString stringWithFormat:@"eCommerce - %@ - Total", actionName];
                 event = [[MPEvent alloc] initWithName:eventName type:MPEventTypeTransaction];
                 
-                eventInfo = [[NSMutableDictionary alloc] initWithCapacity:2];
+                eventInfo = [[NSMutableDictionary alloc] initWithCapacity:4];
                 eventInfo[kMPExpCECurrency] = self.currency ? : @"USD";
                 eventInfo[kMPExpCEProductCount] = @(productCount);
                 
@@ -650,8 +670,14 @@ static NSArray *actionNames;
                     eventInfo[kMPExpCECheckoutStep] = [@(self.checkoutStep) stringValue];
                 }
                 
-                event.info = eventInfo;
-                
+                if (_userDefinedAttributes.count > 0) {
+                    [eventInfo addEntriesFromDictionary:_userDefinedAttributes];
+                }
+
+                if (eventInfo.count > 0) {
+                    event.info = eventInfo;
+                }
+
                 commerceEventInstruction = [[MPCommerceEventInstruction alloc] initWithInstruction:MPCommerceInstructionEvent event:event];
                 expansionInstructions.push_back(commerceEventInstruction);
             }
@@ -661,10 +687,19 @@ static NSArray *actionNames;
         case MPCommerceEventKindPromotion: {
             eventName = [NSString stringWithFormat:@"eCommerce - %@ - Item", [self.promotionContainer actionNameForAction:self.promotionContainer.action]];
             event = [[MPEvent alloc] initWithName:eventName type:MPEventTypeTransaction];
-            
+            eventInfo = [[NSMutableDictionary alloc] initWithCapacity:4];
+
             NSDictionary *promotionDictionary = [self.promotionContainer beautifiedDictionaryRepresentation];
             if (promotionDictionary) {
-                event.info = promotionDictionary;
+                [eventInfo addEntriesFromDictionary:promotionDictionary];
+            }
+
+            if (_userDefinedAttributes.count > 0) {
+                [eventInfo addEntriesFromDictionary:_userDefinedAttributes];
+            }
+
+            if (eventInfo.count > 0) {
+                event.info = eventInfo;
             }
 
             commerceEventInstruction = [[MPCommerceEventInstruction alloc] initWithInstruction:MPCommerceInstructionEvent event:event];
@@ -680,15 +715,22 @@ static NSArray *actionNames;
                     if (listedProducts.count > 0) {
                         for (product in listedProducts) {
                             event = [[MPEvent alloc] initWithName:eventName type:MPEventTypeTransaction];
-                            
-                            eventInfo = [[NSMutableDictionary alloc] initWithCapacity:1];
+                            eventInfo = [[NSMutableDictionary alloc] initWithCapacity:4];
                             eventInfo[kMPExpCEProductImpressionList] = listName;
+
                             productDictionary = [product beautifiedDictionaryRepresentation];
                             if (productDictionary) {
                                 [eventInfo addEntriesFromDictionary:productDictionary];
                             }
                             
-                            event.info = eventInfo;
+                            if (_userDefinedAttributes.count > 0) {
+                                [eventInfo addEntriesFromDictionary:_userDefinedAttributes];
+                            }
+
+                            if (eventInfo.count > 0) {
+                                event.info = eventInfo;
+                            }
+
                             commerceEventInstruction = [[MPCommerceEventInstruction alloc] initWithInstruction:MPCommerceInstructionEvent event:event];
                             expansionInstructions.push_back(commerceEventInstruction);
                         }
@@ -778,10 +820,8 @@ static NSArray *actionNames;
 - (void)setCheckoutOptions:(NSString *)checkoutOptions {
     if (checkoutOptions) {
         self.attributes[kMPCECheckoutOptions] = checkoutOptions;
-        self.beautifiedAttributes[kMPExpCECheckoutOptions] = checkoutOptions;
     } else {
         [self.attributes removeObjectForKey:kMPCECheckoutOptions];
-        [self.beautifiedAttributes removeObjectForKey:kMPExpCECheckoutOptions];
     }
 }
 
@@ -791,11 +831,6 @@ static NSArray *actionNames;
 
 - (void)setCurrency:(NSString *)currency {
     _currency = currency;
-    if (currency) {
-        self.beautifiedAttributes[kMPExpCECurrency] = currency;
-    } else {
-        [self.beautifiedAttributes removeObjectForKey:kMPExpCECurrency];
-    }
 }
 
 - (NSDictionary<NSString *, __kindof NSSet<MPProduct *> *> *)impressions {
@@ -813,10 +848,8 @@ static NSArray *actionNames;
 - (void)setProductListName:(NSString *)productListName {
     if (productListName) {
         self.attributes[kMPCEProductListName] = productListName;
-        self.beautifiedAttributes[kMPExpCEProductListName] = productListName;
     } else {
         [self.attributes removeObjectForKey:kMPCEProductListName];
-        [self.beautifiedAttributes removeObjectForKey:kMPExpCEProductListName];
     }
 }
 
@@ -827,10 +860,8 @@ static NSArray *actionNames;
 - (void)setProductListSource:(NSString *)productListSource {
     if (productListSource) {
         self.attributes[kMPCEProductListSource] = productListSource;
-        self.beautifiedAttributes[kMPExpCEProductListSource] = productListSource;
     } else {
         [self.attributes removeObjectForKey:kMPCEProductListSource];
-        [self.beautifiedAttributes removeObjectForKey:kMPExpCEProductListSource];
     }
 }
 
@@ -860,7 +891,6 @@ static NSArray *actionNames;
 - (void)setCheckoutStep:(NSInteger)checkoutStep {
     NSNumber *checkoutStepNumber = @(checkoutStep);
     self.attributes[kMPCECheckoutStep] = checkoutStepNumber;
-    self.beautifiedAttributes[kMPExpCECheckoutStep] = checkoutStepNumber;
 }
 
 #pragma mark Public methods

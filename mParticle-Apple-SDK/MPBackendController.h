@@ -31,7 +31,6 @@
 @class MPNetworkPerformance;
 @class MPNotificationController;
 @class MPEvent;
-@class MPMediaTrack;
 @class MPCommerceEvent;
 @class MPDataModelAbstract;
 
@@ -78,8 +77,8 @@ typedef NS_ENUM(NSUInteger, MPInitializationStatus) {
 #endif
 
 @property (nonatomic, weak, nullable) id<MPBackendControllerDelegate> delegate;
-@property (nonatomic, strong, nonnull) NSMutableSet<MPEvent *> *eventSet;
-@property (nonatomic, strong, nonnull) MPNetworkCommunication *networkCommunication;
+@property (nonatomic, strong, nullable) NSMutableSet<MPEvent *> *eventSet;
+@property (nonatomic, strong, nullable) MPNetworkCommunication *networkCommunication;
 @property (nonatomic, strong, nullable) MPSession *session;
 @property (nonatomic, unsafe_unretained, readwrite) NSTimeInterval sessionTimeout;
 @property (nonatomic, unsafe_unretained, readonly) MPInitializationStatus initializationStatus;
@@ -110,7 +109,7 @@ typedef NS_ENUM(NSUInteger, MPInitializationStatus) {
 - (void)setUserIdentity:(nullable NSString *)identityString identityType:(MPUserIdentity)identityType attempt:(NSUInteger)attempt completionHandler:(void (^ _Nonnull)(NSString * _Nullable identityString, MPUserIdentity identityType, MPExecStatus execStatus))completionHandler;
 - (void)startWithKey:(nonnull NSString *)apiKey secret:(nonnull NSString *)secret firstRun:(BOOL)firstRun installationType:(MPInstallationType)installationType proxyAppDelegate:(BOOL)proxyAppDelegate registerForSilentNotifications:(BOOL)registerForSilentNotifications completionHandler:(dispatch_block_t _Nonnull)completionHandler;
 - (void)saveMessage:(nonnull MPDataModelAbstract *)abstractMessage updateSession:(BOOL)updateSession;
-- (MPExecStatus)uploadWithCompletionHandler:(void (^ _Nullable)())completionHandler;
+- (MPExecStatus)uploadWithCompletionHandler:(void (^ _Nullable)(void))completionHandler;
 
 #if TARGET_OS_IOS == 1
 - (MPExecStatus)beginLocationTrackingWithAccuracy:(CLLocationAccuracy)accuracy distanceFilter:(CLLocationDistance)distance authorizationRequest:(MPLocationAuthorizationRequest)authorizationRequest;
@@ -118,15 +117,6 @@ typedef NS_ENUM(NSUInteger, MPInitializationStatus) {
 - (void)handleDeviceTokenNotification:(nonnull NSNotification *)notification;
 - (void)receivedUserNotification:(nonnull MParticleUserNotification *)userNotification;
 #endif
-// Media Tracking
-- (void)beginPlaying:(nonnull MPMediaTrack *)mediaTrack attempt:(NSUInteger)attempt completionHandler:(void (^ _Nonnull)(MPMediaTrack * _Nonnull mediaTrack, MPExecStatus execStatus))completionHandler;
-- (MPExecStatus)discardMediaTrack:(nonnull MPMediaTrack *)mediaTrack;
-- (void)endPlaying:(nonnull MPMediaTrack *)mediaTrack attempt:(NSUInteger)attempt completionHandler:(void (^ _Nonnull)(MPMediaTrack * _Nonnull mediaTrack, MPExecStatus execStatus))completionHandler;
-- (void)logMetadataWithMediaTrack:(nonnull MPMediaTrack *)mediaTrack attempt:(NSUInteger)attempt completionHandler:(void (^ _Nonnull)(MPMediaTrack * _Nonnull mediaTrack, MPExecStatus execStatus))completionHandler;
-- (void)logTimedMetadataWithMediaTrack:(nonnull MPMediaTrack *)mediaTrack attempt:(NSUInteger)attempt completionHandler:(void (^ _Nonnull)(MPMediaTrack * _Nonnull mediaTrack, MPExecStatus execStatus))completionHandler;
-- (nullable NSArray *)mediaTracks;
-- (nullable MPMediaTrack *)mediaTrackWithChannel:(nonnull NSString *)channel;
-- (void)updatePlaybackPosition:(nonnull MPMediaTrack *)mediaTrack attempt:(NSUInteger)attempt completionHandler:(void (^ _Nonnull)(MPMediaTrack * _Nonnull mediaTrack, MPExecStatus execStatus))completionHandler;
 
 @end
 
